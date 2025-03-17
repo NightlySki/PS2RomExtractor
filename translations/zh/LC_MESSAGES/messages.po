@@ -1,0 +1,58 @@
+# Chinese translations for PS2 ROM Unpacker.
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-16 10:00+0000\n"
+"PO-Revision-Date: 2024-03-16 10:00+0000\n"
+"Last-Translator: Auto Translator\n"
+"Language: zh\n"
+"Language-Team: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Desempaquetador de ROM de PS2"
+msgstr "PS2 ROM解包器"
+
+msgid "Selecciona tu archivo ROM de PS2 (.bin o .rom0)"
+msgstr "选择您的PS2 ROM文件（.bin或.rom0）"
+
+msgid "Arrastra tu archivo o haz clic para cargarlo"
+msgstr "拖动文件或点击上传"
+
+msgid "Se procesará automáticamente el volcado de la BIOS"
+msgstr "BIOS转储将自动处理"
+
+msgid "Mostrar Opciones"
+msgstr "显示选项"
+
+msgid "Extraer TODOS los Módulos"
+msgstr "提取所有模块"
+
+msgid "No se envió ningún archivo"
+msgstr "未发送文件"
+
+msgid "Nombre de archivo vacío"
+msgstr "文件名为空"
+
+msgid "El archivo debe tener extensión .bin o .rom0"
+msgstr "文件必须具有.bin或.rom0扩展名"
+
+msgid "Archivo ROM no encontrado"
+msgstr "未找到ROM文件"
+
+msgid "ROM cargada correctamente!"
+msgstr "ROM加载成功！"
+
+msgid "Por favor carga una ROM primero"
+msgstr "请先加载ROM"
+
+msgid "Error"
+msgstr "错误"
+
+msgid "Offset"
+msgstr "偏移量"
+
+msgid "Tamaño"
+msgstr "大小"

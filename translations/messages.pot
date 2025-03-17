@@ -1,0 +1,57 @@
+# Translations template for PS2 ROM Unpacker.
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-16 10:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Desempaquetador de ROM de PS2"
+msgstr ""
+
+msgid "Selecciona tu archivo ROM de PS2 (.bin o .rom0)"
+msgstr ""
+
+msgid "Arrastra tu archivo aquí o haz clic para cargarlo. El programa extraerá todos los módulos internos."
+msgstr ""
+
+msgid "Se procesará automáticamente y podrás extraer los módulos que necesites."
+msgstr ""
+
+msgid "Mostrar Opciones"
+msgstr ""
+
+msgid "Extraer TODOS los Módulos"
+msgstr ""
+
+msgid "No se envió ningún archivo"
+msgstr ""
+
+msgid "Nombre de archivo vacío"
+msgstr ""
+
+msgid "El archivo debe tener extensión .bin o .rom0"
+msgstr ""
+
+msgid "Archivo ROM no encontrado"
+msgstr ""
+
+msgid "ROM cargada correctamente!"
+msgstr ""
+
+msgid "Por favor carga una ROM primero"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Offset"
+msgstr ""
+
+msgid "Tamaño"
+msgstr ""

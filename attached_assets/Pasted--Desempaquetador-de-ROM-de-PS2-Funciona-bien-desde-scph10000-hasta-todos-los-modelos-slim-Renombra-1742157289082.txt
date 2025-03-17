@@ -1,0 +1,164 @@
+#Desempaquetador de ROM de PS2
+#Funciona bien desde scph10000 hasta todos los modelos slim
+#Renombra tu volcado a 'rom.bin'
+#Ejecuta y sigue las instrucciones
+#ALL para todos los módulos o escribe un número para un módulo
+#Se creará un nuevo directorio
+#Copia la lista de módulos con números desde la consola
+
+#Cómo funciona:
+#Encontramos el módulo RESET en ROMDIR y según el desplazamiento determinamos
+#el final del primer módulo y el inicio del segundo módulo
+#leemos el segundo módulo, que siempre es la estructura ROMDIR
+#donde están ubicados los tamaños de todos los demás módulos y sus nombres
+#Los tamaños se alinean a 16 bytes
+
+#pendiente: implementar relleno de 16 bytes en la función parseROMDIR - hecho
+#pendiente: crear archivo de reporte con números, nombres y desplazamientos para reempaquetar módulos al volcado
+#pendiente: implementar apertura de archivo por argumentos de línea de comandos y excepciones
+filename = 'rom.bin' ##escribe el tuyo
+import os
+import sys
+
+def romOPEN(romfile): 
+    print("Abriendo:" + romfile)
+    romsize = os.path.getsize(romfile)
+    #siempre 32mbit
+    rom = open(romfile, 'rb')
+    return rom
+
+def findROMDIRSIZE(file , romsize):
+    #ROMDIR siempre está después de RESET
+    #Tamaño ROMDIR = tamaño de toda la tabla + 16 bytes de ceros
+    i=0  #contador
+    a=0  #primer byte R
+    b=[] #otros bytes ESET
+    d=[] #4 bytes donde se indica tamaño en little-endian
+    e=0  #posición en el archivo después de RESET, por ejemplo 0x2705 para scph-10000
+    f=0  #valor del tamaño en big-endian
+    g=0  #tamaño de ROMDIR
+    h=0  #inicio de ROMDIR (0x2700 para scph-10000)
+    
+    print("Buscando el tamaño del módulo RESET")
+    for i in range(0,romsize): #Recorrido por el archivo
+        a = file.read(1)
+        
+        if (a[0]==0x52):  #R
+            b=list(file.read(4))
+            if (b[0:] ==[0x45,0x53,0x45,0x54]): #ESET
+                e=file.tell() #0x2705 para scph-10000
+                h=e-5
+                print("Encontrado en:" + hex(h))
+             
+                f=parseSIZE(file,(e-5+10+2)) 
+
+                #print("Little-endian:"+d.hex())
+                print("Tamaño RESET:" +hex (f))
+                print("El módulo Reset termina en:" + hex(e-6))
+
+                f=parseSIZE(file,(h+0x10+2+10))
+
+                print("Tamaño ROMDIR:" +hex (f))
+
+                #Devolvemos inicio de ROMDIR y su tamaño
+                return h,f
+                break
+        a=[]
+        b=[]
+
+def fixSIZE16(size):
+     #Resto de la división. 16-a=cuántos bytes agregar
+    zza=size%16
+    zzb=16-zza
+    if zza==0:
+        return size
+    else:
+        return size+zzb
+    
+
+def parseSIZE(file, offset):
+    file.seek((offset)) #vamos a los bytes de tamaño
+    d=(file.read(4)) #leemos
+    f=int("0x"+ (d[::-1]).hex()  ,16) #cambiamos orden de bytes
+    return f
+
+def countMODULES(romdir_location):
+    a = romdir_location
+    b=(((a[1])//16)-1)
+    return b
+
+def parseROMDIR(file, romdir_location ):
+    print('Módulos:')
+    #print('')
+    i=0                 #Contador
+    a = romdir_location #Para escribir menos
+    b=(((a[1])//16)-1)  #Número de módulos
+    modules = []        #Módulos
+    c=''
+    cc=''
+    #Nombre del módulo para el bucle
+    d=0                 #Tamaño del módulo para el bucle
+    e=0 #desplazamiento absoluto para el bucle
+    temp=[]
+    file.seek(a[0])
+    for i in range (0,b):
+        c=file.read(10)
+        cc=c.decode('ascii')
+        print(str(i)+'.'+(cc))
+        file.seek(file.tell()+2)
+        #if (i==0) or (i==1) or (i==2) or (i==3):  #scph-70000 derivado
+        #    d=parseSIZE (file, file.tell()) #tamaño RESET siempre alineado
+        #else:
+        d=parseSIZE (file, file.tell())
+            
+        fd=fixSIZE16(d)
+        modules.append([cc,e,fd,d])
+        e=e+fd        
+        
+        
+    return modules
+        
+
+def extractModule(romfile, modules, module_number ):
+    
+    
+    romfile.seek(modules[module_number][1])
+    print(str(module_number)+".Módulo:" + str(modules[module_number][0]) + " extraído")
+    print("    Desplazamiento:"+hex(modules[module_number][1]))
+    print("    Tamaño con relleno 16 bytes:"+hex(modules[module_number][2]))
+    print("    Tamaño decimal:"+str(modules[module_number][2]))
+    print("    Tamaño según ROMDIR:"+hex(modules[module_number][3]))
+
+    module_out=romfile.read(modules[module_number][2])
+    f = open(str(module_number), "wb")
+    f.write(module_out)
+    f.close()
+
+
+###No usado:
+#structROMDIR = {'name':10,'ext':2,'size':4}
+#Formato de entradas en ROMDIR
+
+#filename = 'rom.bin'
+
+size=os.path.getsize(filename)
+romfile=romOPEN(filename)
+romdir_location = findROMDIRSIZE(romfile, size)
+z=parseROMDIR(romfile, romdir_location)
+#print(z) nombres de módulos en romdir, tamaños y desplazamientos ajustados.
+moddir='modules-'+filename
+try: 
+    os.mkdir(moddir) 
+except OSError as error: 
+    exit     
+os.chdir(moddir)
+modules_count=countMODULES(romdir_location)
+print('Total de módulos:'+str(modules_count)+' desde:0 hasta: ' + str(modules_count-1))
+innum=input("Escribe el número del módulo o ALL para extraer uno o TODOS los módulos:")
+if innum=='ALL':
+   for i in range(0,modules_count):
+    extractModule(romfile, z, i)
+else:
+    extractModule(romfile, z, int(innum))
+romfile.close()
+input('Escribe cualquier cosa para cerrar')

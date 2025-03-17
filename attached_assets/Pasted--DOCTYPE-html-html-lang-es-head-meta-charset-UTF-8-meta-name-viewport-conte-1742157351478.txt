@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Desempaquetador de ROM PS2</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #1c1c1e; 
+            color: #f0f0f0; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: auto; 
+            background: #2c2c2e; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+        }
+        h1 { 
+            text-align: center; 
+            color: #ffcc00; 
+        }
+        .instructions { 
+            background: #3a3a3c; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        .upload-area { 
+            border: 2px dashed #ffcc00; 
+            border-radius: 8px; 
+            padding: 30px; 
+            text-align: center; 
+            cursor: pointer; 
+        }
+        .upload-area:hover { 
+            background: #444; 
+        }
+        .hidden-input { 
+            display: none; 
+        }
+        button { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+        #extractAll { 
+            background-color: #28a745; 
+            color: white; 
+        }
+        #menuBtn { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        #menu { 
+            margin-top: 20px; 
+            display: none; 
+            background: #3a3a3c; 
+            padding: 10px; 
+            border-radius: 8px; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .menu-item { 
+            padding: 8px; 
+            border-bottom: 1px solid #555; 
+            cursor: pointer; 
+        }
+        .menu-item:hover { 
+            background-color: #444; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Desempaquetador de ROM de PS2</h1>
+        <div class="instructions">
+            <p><strong>Instrucciones:</strong></p>
+            <ul>
+                <li>Selecciona tu archivo ROM de PS2 (.bin)</li>
+                <li>Arrastra tu archivo o haz clic para cargarlo</li>
+            </ul>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            Arrastra tu archivo .bin aquí o haz clic para cargarlo
+            <input type="file" id="fileInput" class="hidden-input" accept=".bin">
+        </div>
+
+        <button id="menuBtn">Mostrar Opciones</button>
+        <button id="extractAll">Extraer TODOS los Módulos</button>
+
+        <div id="menu">
+            <!-- Botones dinámicos -->
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        const PS2ROMUnpacker = {
+            romBuffer: null,
+            modules: [],
+            
+            async loadROM(file) {
+                this.romBuffer = new Uint8Array(await file.arrayBuffer());
+                const romdirInfo = this.findROMDIR();
+                if (!romdirInfo) throw new Error("No se encontró ROMDIR");
+                this.modules = this.parseROMDIR(romdirInfo);
+                return this.modules;
+            },
+
+            // Implementación precisa del algoritmo Python
+            findROMDIR() {
+                for (let i = 0; i < this.romBuffer.length - 5; i++) {
+                    if (this.romBuffer[i] === 0x52 &&  // R
+                        this.romBuffer[i+1] === 0x45 && // E
+                        this.romBuffer[i+2] === 0x53 && // S
+                        this.romBuffer[i+3] === 0x45 && // E
+                        this.romBuffer[i+4] === 0x54) { // T
+                        
+                        const start = i;
+                        console.log("[DEBUG] RESET encontrado en 0x" + start.toString(16));
+
+                        // Leer tamaño RESET (offset + 0x10)
+                        const resetSize = this.readU32(start + 0x10);
+                        console.log("[DEBUG] Tamaño RESET: 0x" + resetSize.toString(16));
+
+                        // Calcular final del módulo RESET
+                        const resetEnd = start + 5 + resetSize;
+                        
+                        // Calcular inicio de ROMDIR (alineado a 16 bytes)
+                        const romdirOffset = Math.ceil(resetEnd / 16) * 16;
+                        console.log("[DEBUG] ROMDIR offset: 0x" + romdirOffset.toString(16));
+
+                        // Leer tamaño ROMDIR (offset + 0x1C)
+                        const romdirSize = this.readU32(start + 0x1C);
+                        console.log("[DEBUG] Tamaño ROMDIR: 0x" + romdirSize.toString(16));
+
+                        // Validar integridad
+                        if (romdirOffset + romdirSize > this.romBuffer.length) {
+                            throw new Error("Estructura ROMDIR corrupta");
+                        }
+
+                        return { 
+                            offset: romdirOffset,
+                            size: romdirSize 
+                        };
+                    }
+                }
+                return null;
+            },
+
+            parseROMDIR(romdirInfo) {
+                const modules = [];
+                const entryCount = Math.floor(romdirInfo.size / 16) - 1;
+                let currentOffset = 0;
+
+                for (let i = 0; i < entryCount; i++) {
+                    const entryOffset = romdirInfo.offset + (i * 16);
+                    
+                    // Validar entrada ROMDIR
+                    if (entryOffset + 16 > this.romBuffer.length) {
+                        console.error("[ERROR] Entrada ROMDIR fuera de límites");
+                        break;
+                    }
+
+                    // Leer datos del módulo
+                    const name = this.readString(entryOffset, 10);
+                    const size = this.readU32(entryOffset + 12);
+                    const sizePadded = this.fixSize16(size);
+
+                    // Validar tamaño del módulo
+                    if (currentOffset + sizePadded > this.romBuffer.length) {
+                        console.error("[ERROR] Tamaño de módulo excedido");
+                        break;
+                    }
+
+                    modules.push({
+                        name: name || `UNKNOWN_${i}`,
+                        offset: currentOffset,
+                        size: size,
+                        sizePadded: sizePadded
+                    });
+
+                    currentOffset += sizePadded;
+                }
+                return modules;
+            },
+
+            // Funciones auxiliares
+            readU32(offset) {
+                return new DataView(
+                    this.romBuffer.buffer,
+                    this.romBuffer.byteOffset + offset,
+                    4
+                ).getUint32(0, true);
+            },
+
+            readString(offset, length) {
+                return new TextDecoder().decode(
+                    this.romBuffer.slice(offset, offset + length)
+                ).replace(/\0/g, '');
+            },
+
+            fixSize16(size) {
+                return size + (16 - (size % 16)) % 16;
+            }
+        };
+
+        // Interfaz de usuario
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const menuBtn = document.getElementById('menuBtn');
+        const menu = document.getElementById('menu');
+        const extractAllBtn = document.getElementById('extractAll');
+
+        // Eventos
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#444';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            await handleFile(file);
+        });
+
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            await handleFile(file);
+        });
+
+        async function handleFile(file) {
+            try {
+                await PS2ROMUnpacker.loadROM(file);
+                generateModuleList();
+                alert('ROM cargada correctamente!');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function generateModuleList() {
+            menu.innerHTML = PS2ROMUnpacker.modules.map((module, index) => `
+                <div class="menu-item">
+                    ${index}. ${module.name}<br>
+                    <small>Offset: 0x${module.offset.toString(16).padStart(8, '0')} | 
+                    Tamaño: ${module.size} bytes</small>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.menu-item').forEach((item, index) => {
+                item.addEventListener('click', () => extractModule(index));
+            });
+        }
+
+        function extractModule(index) {
+            const module = PS2ROMUnpacker.modules[index];
+            const data = PS2ROMUnpacker.romBuffer.slice(
+                module.offset, 
+                module.offset + module.sizePadded
+            );
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([data]));
+            link.download = `${index}_${module.name.replace(/\s+/g, '_')}.bin`;
+            link.click();
+        }
+
+        extractAllBtn.addEventListener('click', async () => {
+            const zip = new JSZip();
+            PS2ROMUnpacker.modules.forEach((module, index) => {
+                const data = PS2ROMUnpacker.romBuffer.slice(
+                    module.offset, 
+                    module.offset + module.sizePadded
+                );
+                zip.file(`${index}_${module.name.replace(/\s+/g, '_')}.bin`, data);
+            });
+
+            const content = await zip.generateAsync({type: "blob"});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'ps2_modules.zip';
+            link.click();
+        });
+
+        menuBtn.addEventListener('click', () => {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>

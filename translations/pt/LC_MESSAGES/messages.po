@@ -1,0 +1,58 @@
+# Portuguese translations for PS2 ROM Unpacker.
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-16 10:00+0000\n"
+"PO-Revision-Date: 2024-03-16 10:00+0000\n"
+"Last-Translator: Auto Translator\n"
+"Language: pt\n"
+"Language-Team: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Desempaquetador de ROM de PS2"
+msgstr "Descompactador de ROM PS2"
+
+msgid "Selecciona tu archivo ROM de PS2 (.bin o .rom0)"
+msgstr "Selecione seu arquivo ROM PS2 (.bin ou .rom0)"
+
+msgid "Arrastra tu archivo o haz clic para cargarlo"
+msgstr "Arraste seu arquivo ou clique para fazer upload"
+
+msgid "Se procesará automáticamente el volcado de la BIOS"
+msgstr "O dump da BIOS será processado automaticamente"
+
+msgid "Mostrar Opciones"
+msgstr "Mostrar Opções"
+
+msgid "Extraer TODOS los Módulos"
+msgstr "Extrair TODOS os Módulos"
+
+msgid "No se envió ningún archivo"
+msgstr "Nenhum arquivo foi enviado"
+
+msgid "Nombre de archivo vacío"
+msgstr "Nome do arquivo vazio"
+
+msgid "El archivo debe tener extensión .bin o .rom0"
+msgstr "O arquivo deve ter extensão .bin ou .rom0"
+
+msgid "Archivo ROM no encontrado"
+msgstr "Arquivo ROM não encontrado"
+
+msgid "ROM cargada correctamente!"
+msgstr "ROM carregada com sucesso!"
+
+msgid "Por favor carga una ROM primero"
+msgstr "Por favor, carregue uma ROM primeiro"
+
+msgid "Error"
+msgstr "Erro"
+
+msgid "Offset"
+msgstr "Deslocamento"
+
+msgid "Tamaño"
+msgstr "Tamanho"
